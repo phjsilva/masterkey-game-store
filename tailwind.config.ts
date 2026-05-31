@@ -9,8 +9,8 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        "fundo": "#04052e",
-        "button": "#a0d62e",
+        fundo: "#020617",
+        button: "#a0d62e",
       },
       padding: {
         'sm_main': '50px 40px 0 40px',

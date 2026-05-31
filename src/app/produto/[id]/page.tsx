@@ -1,203 +1,177 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import Image from "next/image";
 import { ShoppingCart } from "lucide-react";
+import Image from "next/image";
+import { notFound } from "next/navigation";
+import { PriceBlock } from "@/components/product/price-block";
+import { calculateFinalPrice, formatDate } from "@/lib/formatters";
+import { getGameDetails } from "@/lib/api";
 
-interface GameDetailsType {
+interface ProductPageProps {
+  params: {
     id: string;
-    name: string;
-    description: string;
-    price: number;
-    desconto: number;
-    giantbombImageUrl: string;
-    rawgImageUrl: string;
-    genre: string[];
-    plataforma: string[];
-    lancamento: string;
-    empresa: string;
-    size: number;
-    requirements: {
-        system: string;
-        processor: string;
-        memory: string;
-        graphics: string;
-        directX: string;
-        storage: string;
-    }[];
-    highlights: { title: string; description: string }[];
-    closingDescription: string;
-    finalNote: string;
-    highlightsTitle: string;
-    title: string;
+  };
 }
 
-const GameDetails = ({ params }: { params: { id: string } }) => {
-    const [gameDetails, setGameDetails] = useState<GameDetailsType | null>(null);
+export default async function ProductPage({ params }: ProductPageProps) {
+  const game = await getGameDetails(params.id).catch(() => null);
 
-    const gameId = params.id; // O ID agora é acessado via params
-    console.log("Fetching details for game ID:", gameId);
+  if (!game) {
+    notFound();
+  }
 
-    useEffect(() => {
-        const fetchGameDetails = async () => {
-            try {
-                const response = await fetch(`https://keygames.onrender.com/games/${gameId}`);
-                const data = await response.json();
-                if (response.ok) {
-                    setGameDetails(data);
-                } else {
-                    console.error("Failed to fetch game details:", data.message);
-                }
-            } catch (error) {
-                console.error("Error fetching game details:", error);
-            }
-        };
+  const image = game.rawgImageUrl || game.giantbombImageUrl || "/assets/2.jpg";
+  const finalPrice = calculateFinalPrice(game.price, game.desconto);
+  const details = [
+    { label: "Gênero", value: game.genre?.join(", ") },
+    { label: "Plataforma", value: game.plataforma?.join(", ") },
+    { label: "Lançamento", value: formatDate(game.lancamento) },
+    { label: "Empresa", value: game.empresa },
+    { label: "Tamanho", value: game.size ? `${game.size} GB` : undefined },
+  ];
 
-        fetchGameDetails();
-    }, [gameId]);
+  return (
+    <main className="min-h-screen bg-slate-950 text-white">
+      <section className="relative min-h-[620px] overflow-hidden pt-16">
+        <Image
+          src={image}
+          alt={game.name}
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/70 to-black/30" />
 
-    if (!gameDetails) {
-        return <div>Loading...</div>;
-    }
-
-
-    return (
-        <main className="w-full h-svh">
+        <div className="relative mx-auto flex min-h-[560px] max-w-7xl items-end px-5 pb-14 sm:px-8 lg:px-10">
+          <div className="grid w-full gap-8 lg:grid-cols-[1fr_360px] lg:items-end">
             <div>
-                <Image
-                    src={gameDetails.rawgImageUrl || gameDetails.giantbombImageUrl || 'https://media.rawg.io/media/games/699/69907ecf13f172e9e144069769c3be73.jpg'}
-                    alt={gameDetails.title}
-                    width={1000}
-                    height={200}
-                    quality={100}
-                    className="w-full fixed -z-50 hidden sm:block"
+              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-lime-300">
+                Jogo digital
+              </p>
+              <h1 className="mt-3 max-w-4xl text-4xl font-bold sm:text-6xl">
+                {game.name}
+              </h1>
+              {game.title ? (
+                <p className="mt-4 max-w-2xl text-lg text-slate-200">
+                  {game.title}
+                </p>
+              ) : null}
+            </div>
+
+            <aside className="rounded-lg bg-slate-900/95 p-5 shadow-2xl ring-1 ring-white/10 backdrop-blur">
+              <div className="flex justify-end">
+                <PriceBlock
+                  price={game.price}
+                  discount={game.desconto}
+                  finalPrice={finalPrice}
                 />
+              </div>
+              <div className="mt-5 grid gap-3">
+                <button className="inline-flex h-12 items-center justify-center gap-2 rounded bg-lime-500 px-5 font-bold text-slate-950 transition hover:bg-lime-400">
+                  <ShoppingCart size={20} />
+                  Adicionar ao carrinho
+                </button>
+                <button className="h-12 rounded bg-white/10 px-5 font-bold text-white transition hover:bg-white/15">
+                  Comprar agora
+                </button>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto grid max-w-7xl gap-10 px-5 py-14 sm:px-8 lg:grid-cols-[1.2fr_0.8fr] lg:px-10">
+        <article className="rounded-lg bg-slate-900 p-6 ring-1 ring-white/10">
+          <h2 className="text-2xl font-bold">Descrição</h2>
+          {game.description ? (
+            <p className="mt-5 leading-7 text-slate-300">{game.description}</p>
+          ) : null}
+
+          {game.highlights?.length ? (
+            <div className="mt-8">
+              <h3 className="text-xl font-semibold">
+                {game.highlightsTitle || "Destaques"}
+              </h3>
+              <ul className="mt-4 grid gap-4">
+                {game.highlights.map((highlight) => (
+                  <li key={highlight.title} className="text-slate-300">
+                    <strong className="text-white">{highlight.title}:</strong>{" "}
+                    {highlight.description}
+                  </li>
+                ))}
+              </ul>
             </div>
+          ) : null}
 
-            <div className="w-full h-4/5">
-                <span className="w-full h-full"></span>
-            </div>
+          {game.closingDescription ? (
+            <p className="mt-8 leading-7 text-slate-300">
+              {game.closingDescription}
+            </p>
+          ) : null}
+          {game.finalNote ? (
+            <p className="mt-4 font-semibold text-lime-300">{game.finalNote}</p>
+          ) : null}
+        </article>
 
-            <section className="w-full bg-slate-200 bg-opacity-95 z-40 p-main sm:p-sm_main relative">
-                <h1 className="text-black font-semibold text-3xl">
-                    {gameDetails.name || 'Título do jogo não disponível'}
-                </h1>
-                <div className="w-4/12 bg-slate-100 h-64 absolute right-4 -top-36 shadow-md">
-                    <div className="w-full h-1/3 flex items-center py-3 gap-20">
-                        <div className="w-4/12 h-3/4 flex justify-center items-center bg-violet-600 rounded-r-xl">
-                            <h1 className="text-slate-950 md:font-semibold text-3xl">{gameDetails.desconto || 'Título do jogo não disponível'} %</h1>
-                        </div>
-                        <div className="flex flex-col justify-end items-end">
-                            <span className="text-lg line-through w-fit text-black font-extralight opacity-60">
-                                R${gameDetails.price}
-                            </span>
-                            <span className="w-fit text-black text-2xl">R${(gameDetails.price - (gameDetails.desconto || 0) / 100 * gameDetails.price).toFixed(2)}</span>
-                        </div>
-                    </div>
-                    <div className="w-full h-1/3 p-3">
-                        <button className="flex p-1 bg-custom-gradient font-semibold w-full h-full justify-center items-center gap-3 rounded-xl">
-                            <ShoppingCart size={25} />
-                            <span className="hidden sm:hidden md:block md:text-lg">Add to cart</span>
-                        </button>
-                    </div>
-                    <div className="h-1/3 p-3">
-                    <button className="flex p-1 bg-violet-950 font-semibold w-full h-full justify-center items-center gap-3 rounded-xl">
-                            <span className="hidden sm:hidden md:block md:text-lg">Comprar agora</span>
-                        </button>
-                    </div>
+        <aside className="space-y-8">
+          <section className="rounded-lg bg-slate-900 p-6 ring-1 ring-white/10">
+            <h2 className="text-xl font-bold">Detalhes do game</h2>
+            <dl className="mt-5 divide-y divide-white/10">
+              {details.map((detail) => (
+                <div
+                  key={detail.label}
+                  className="grid grid-cols-[120px_1fr] gap-4 py-4 text-sm"
+                >
+                  <dt className="font-semibold text-slate-400">{detail.label}</dt>
+                  <dd>{detail.value || "Não informado"}</dd>
                 </div>
-                <div>
-                    <h1 className="text-slate-950 md:font-semibold text-3xl">{gameDetails.title}</h1>
-                </div>
+              ))}
+            </dl>
+          </section>
 
-                <div className="w-full flex h-auto mt-20 gap-10">
-                    <div className="w-1/2">
-                        <div className="text-black w-full border-b-[1px] border-black border-opacity-45 text-lg p-2">
-                            <h1>Descrição</h1>
-                        </div>
-                        <div className="container mx-auto p-6 text-black">
-                            <h1 className="text-2xl font-bold mb-6">{gameDetails.title}</h1>
-                            <p className="mb-6 text-black">{gameDetails.description}</p>
-                            <h2 className="text-2xl font-semibold mb-4">{gameDetails.highlightsTitle}</h2>
-                            <ul className="list-disc pl-6 space-y-4">
-                                {gameDetails.highlights.map((highlight, index) => (
-                                    <li key={index}>
-                                        <strong>{highlight.title}:</strong> {highlight.description}
-                                    </li>
-                                ))}
-                            </ul>
-                            <p className="mb-6 text-black">{gameDetails.closingDescription}</p>
-                            <p className="text-black">
-                                <strong>{gameDetails.finalNote}</strong>
-                            </p>
-                        </div>
+          {game.requirements?.length ? (
+            <section className="rounded-lg bg-slate-900 p-6 ring-1 ring-white/10">
+              <h2 className="text-xl font-bold">Requisitos</h2>
+              <div className="mt-5 space-y-5">
+                {game.requirements.map((requirement) => (
+                  <dl
+                    key={`${requirement.system}-${requirement.processor}`}
+                    className="grid gap-3 rounded bg-white/5 p-4 text-sm"
+                  >
+                    <div>
+                      <dt className="font-semibold text-slate-400">Sistema</dt>
+                      <dd>{requirement.system}</dd>
                     </div>
-                    <div className="flex-1">
-                        <div className="text-black w-full border-b-[1px] border-black border-opacity-45 text-lg p-2">
-                            <h1>Detalhes do game</h1>
-                        </div>
-
-                        <div>
-                            <table className="min-w-full border-collapse text-black">
-                                <tbody>
-                                    <tr className="border-b border-gray-600">
-                                        <td className="p-4 font-semibold">Gênero</td>
-                                        <td className="p-4">{gameDetails.genre.join(', ')}</td>
-                                    </tr>
-                                    <tr className="border-b border-gray-600">
-                                        <td className="p-4 font-semibold">Plataforma</td>
-                                        <td className="p-4">{gameDetails.plataforma.join(', ')}</td>
-                                    </tr>
-                                    <tr className="border-b border-gray-600">
-                                        <td className="p-4 font-semibold">Data de lançamento</td>
-                                        <td className="p-4">{new Date(gameDetails.lancamento).toLocaleDateString()}</td>
-                                    </tr>
-                                    <tr className="border-b border-gray-600">
-                                        <td className="p-4 font-semibold">Empresa</td>
-                                        <td className="p-4">{gameDetails.empresa}</td>
-                                    </tr>
-                                    <tr className="border-b border-gray-600">
-                                        <td className="p-4 font-semibold">Tamanho</td>
-                                        <td className="p-4">{gameDetails.size} GB</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <div className="mt-6">
-                            <div className="text-black w-full border-b-[1px] border-black border-opacity-45 text-lg p-2">
-                                <h1>Requisitos</h1>
-                            </div>
-                            <table className="min-w-full border-collapse text-black mt-4">
-                                <thead>
-                                    <tr className="border-b border-gray-600">
-                                        <th className="p-4 text-left font-semibold">Sistema</th>
-                                        <th className="p-4 text-left font-semibold">Processador</th>
-                                        <th className="p-4 text-left font-semibold">Memória</th>
-                                        <th className="p-4 text-left font-semibold">Gráficos</th>
-                                        <th className="p-4 text-left font-semibold">DirectX</th>
-                                        <th className="p-4 text-left font-semibold">Armazenamento</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {gameDetails.requirements.map((req, index) => (
-                                        <tr key={index} className="border-b border-gray-600">
-                                            <td className="p-4">{req.system}</td>
-                                            <td className="p-4">{req.processor}</td>
-                                            <td className="p-4">{req.memory}</td>
-                                            <td className="p-4">{req.graphics}</td>
-                                            <td className="p-4">{req.directX}</td>
-                                            <td className="p-4">{req.storage}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
+                    <div>
+                      <dt className="font-semibold text-slate-400">
+                        Processador
+                      </dt>
+                      <dd>{requirement.processor}</dd>
                     </div>
-                </div>
+                    <div>
+                      <dt className="font-semibold text-slate-400">Memória</dt>
+                      <dd>{requirement.memory}</dd>
+                    </div>
+                    <div>
+                      <dt className="font-semibold text-slate-400">Gráficos</dt>
+                      <dd>{requirement.graphics}</dd>
+                    </div>
+                    <div>
+                      <dt className="font-semibold text-slate-400">DirectX</dt>
+                      <dd>{requirement.directX}</dd>
+                    </div>
+                    <div>
+                      <dt className="font-semibold text-slate-400">
+                        Armazenamento
+                      </dt>
+                      <dd>{requirement.storage}</dd>
+                    </div>
+                  </dl>
+                ))}
+              </div>
             </section>
-        </main>
-    );
-};
-
-export default GameDetails;
+          ) : null}
+        </aside>
+      </section>
+    </main>
+  );
+}

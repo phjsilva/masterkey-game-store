@@ -1,36 +1,100 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# MasterKey
 
-## Getting Started
+MasterKey é uma vitrine de e-commerce para jogos digitais, construída com Next.js, TypeScript e Tailwind CSS. O projeto consome uma API externa de games, organiza produtos por categorias e apresenta páginas de listagem, detalhes do produto e suporte.
 
-First, run the development server:
+## Preview
+
+O foco da interface é simular uma loja moderna de games, com hero promocional, carrosséis de destaque, cards de produto responsivos, preços com desconto e página individual com descrição, requisitos e informações comerciais.
+
+## Funcionalidades
+
+- Home com hero promocional e seções de produtos.
+- Carrosséis responsivos para destaques e categorias.
+- Listas de mais vendidos e novos lançamentos.
+- Página de detalhes do jogo com preço, desconto, descrição, requisitos e metadados.
+- Central de suporte com busca visual e categorias de atendimento.
+- Layout responsivo para desktop, tablet e mobile.
+- Componentização organizada por responsabilidade.
+
+## Tecnologias
+
+- Next.js 14
+- React 18
+- TypeScript
+- Tailwind CSS
+- Swiper
+- Lucide React
+
+## Arquitetura
+
+```text
+src
+├── app
+│   ├── page.tsx
+│   ├── layout.tsx
+│   └── produto
+│       ├── [id]/page.tsx
+│       └── suporte/page.tsx
+├── components
+│   ├── layout
+│   ├── product
+│   └── sections
+├── lib
+│   ├── api.ts
+│   └── formatters.ts
+└── types
+    └── game.ts
+```
+
+## Como executar
+
+Clone o repositório e instale as dependências:
+
+```bash
+npm install
+```
+
+Inicie o ambiente de desenvolvimento:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Acesse:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```text
+http://localhost:3000
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Scripts
 
-## Learn More
+```bash
+npm run dev
+npm run build
+npm run start
+npm run lint
+```
 
-To learn more about Next.js, take a look at the following resources:
+## API
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+O projeto consome dados da API:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```text
+https://keygames.onrender.com
+```
 
-## Deploy on Vercel
+Principais rotas utilizadas:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- `/games/vendidos`
+- `/games/destaques`
+- `/games/recentes`
+- `/games/rpg`
+- `/games/:id`
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Melhorias aplicadas
+
+- Separação de tipos, serviços de API e formatadores.
+- Substituição de múltiplos `useEffect` por carregamento server-side com revalidação.
+- Componentes reutilizáveis para cards, preço, hero, carrosséis e header.
+- Correção de textos, metadata e responsividade.
+- Remoção de código duplicado e componentes antigos não utilizados.
