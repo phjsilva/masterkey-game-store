@@ -1,4 +1,4 @@
-# MasterKey
+# MasterKey Game Store
 
 MasterKey é uma vitrine de e-commerce para jogos digitais desenvolvida com Next.js, React, TypeScript e Tailwind CSS.  
 O projeto consome uma API externa para listar jogos, organizar produtos por categorias e exibir páginas de detalhes.  
